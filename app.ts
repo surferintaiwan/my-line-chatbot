@@ -27,6 +27,10 @@ app.get(
 
 app.post(
     '/webhook',
+    middleware({
+        channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN || '',
+        channelSecret: process.env.CHANNEL_SECRET as string,
+    }),
     async (req: Request, res: Response): Promise<Response> => {
         const events: WebhookEvent[] = req.body.events;
 
