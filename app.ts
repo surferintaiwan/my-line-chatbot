@@ -91,7 +91,7 @@ const textEventHandler = async (event: WebhookEvent): Promise<MessageAPIResponse
                     // };
 
                     // detect intent
-                    const responseByIntent =  await handleText(message.text);
+                    const responseByIntent =  await handleText(event);
                     const response: TextMessage = {
                         type: 'text',
                         text: responseByIntent as string
