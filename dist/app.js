@@ -42,16 +42,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var express_1 = __importDefault(require("express"));
 var dotenv_1 = __importDefault(require("dotenv"));
 var bot_sdk_1 = require("@line/bot-sdk");
+var dialogflow_1 = __importDefault(require("@google-cloud/dialogflow"));
 var PORT = process.env.PORT || 3000;
 var app = express_1.default();
 if (process.env.NODE_ENV !== 'production') {
     dotenv_1.default.config();
 }
+// LINE
 var clientConfig = {
     channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN || '',
     channelSecret: process.env.CHANNEL_SECRET,
 };
 var client = new bot_sdk_1.Client(clientConfig);
+// dialogflow
+var languageCode = 'zh-TW';
+var projectId = 'my-line-chatbot-yutq';
+var credentials = {
+    client_email: process.env.DIALOGFLOW_CLIENT_EMAIL,
+    private_key: process.env.DIALOGFLOW_PRIVATE_KEY
+};
+var sessionClient = new dialogflow_1.default.SessionsClient({ projectId: projectId, credentials: credentials });
 app.get('/', function (_, res) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, res.status(200).json({
@@ -60,7 +70,10 @@ app.get('/', function (_, res) { return __awaiter(void 0, void 0, void 0, functi
             })];
     });
 }); });
-app.post('/webhook', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+app.post('/webhook', bot_sdk_1.middleware({
+    channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN || '',
+    channelSecret: process.env.CHANNEL_SECRET,
+}), function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var events, results;
     return __generator(this, function (_a) {
         switch (_a.label) {
@@ -101,29 +114,85 @@ app.post('/webhook', function (req, res) { return __awaiter(void 0, void 0, void
 }); });
 // Function handler to receive the text.
 var textEventHandler = function (event) { return __awaiter(void 0, void 0, void 0, function () {
-    var replyToken, text, response;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
+    var replyToken, _a, message, _b, responseByIntent, response_1;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
             case 0:
                 // Process all variables here.
                 if (event.type !== 'message' || event.message.type !== 'text') {
                     return [2 /*return*/];
                 }
                 replyToken = event.replyToken;
-                text = event.message.text;
-                response = {
-                    type: 'text',
-                    text: text,
-                };
-                // Reply to the user.
-                return [4 /*yield*/, client.replyMessage(replyToken, response)];
+                _a = event.type;
+                switch (_a) {
+                    case 'message': return [3 /*break*/, 1];
+                }
+                return [3 /*break*/, 6];
             case 1:
-                // Reply to the user.
-                _a.sent();
-                return [2 /*return*/];
+                message = event.message;
+                _b = event.message.type;
+                switch (_b) {
+                    case 'text': return [3 /*break*/, 2];
+                }
+                return [3 /*break*/, 5];
+            case 2: return [4 /*yield*/, handleText(message.text)];
+            case 3:
+                responseByIntent = _c.sent();
+                response_1 = {
+                    type: 'text',
+                    text: responseByIntent
+                };
+                return [4 /*yield*/, client.replyMessage(replyToken, response_1)];
+            case 4:
+                _c.sent();
+                _c.label = 5;
+            case 5: throw new Error("Unknown message: " + JSON.stringify(message));
+            case 6: throw new Error("Unknown event: " + JSON.stringify(event));
         }
     });
 }); };
+function handleText(event) {
+    return __awaiter(this, void 0, void 0, function () {
+        var sessionId, sessionPath, text, request, responses, result;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    sessionId = event.source.userId;
+                    sessionPath = sessionClient.projectAgentSessionPath(projectId, sessionId);
+                    text = event.message.text;
+                    request = {
+                        session: sessionPath,
+                        // queryParams: {
+                        // payload: structjson.jsonToStructProto({
+                        //     "data": event,
+                        //     "source": "line"
+                        // })
+                        // },
+                        queryInput: {
+                            text: {
+                                text: text,
+                                languageCode: languageCode
+                            }
+                        }
+                    };
+                    return [4 /*yield*/, sessionClient.detectIntent(request)];
+                case 1:
+                    responses = _a.sent();
+                    console.log('Detected intent');
+                    result = responses[0].queryResult;
+                    console.log("  Query: " + (result === null || result === void 0 ? void 0 : result.queryText));
+                    console.log("  Response: " + (result === null || result === void 0 ? void 0 : result.fulfillmentText));
+                    if (result === null || result === void 0 ? void 0 : result.intent) {
+                        console.log("  Intent: " + (result === null || result === void 0 ? void 0 : result.intent.displayName));
+                    }
+                    else {
+                        console.log('  No intent matched.');
+                    }
+                    return [2 /*return*/, result === null || result === void 0 ? void 0 : result.fulfillmentText];
+            }
+        });
+    });
+}
 app.listen(PORT, function () {
     console.log("Application is live and listening on port " + PORT);
 });
