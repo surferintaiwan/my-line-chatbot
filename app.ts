@@ -20,7 +20,7 @@ const languageCode = 'zh-TW';
 const projectId = 'my-line-chatbot-yutq';
 const credentials = {
     client_email: process.env.DIALOGFLOW_CLIENT_EMAIL,
-    private_key: process.env.DIALOGFLOW_PRIVATE_KEY
+    private_key: (process.env.DIALOGFLOW_PRIVATE_KEY as string).replace(/\\n/g, '\n')
 }
 
 console.log('credentials=>', credentials)

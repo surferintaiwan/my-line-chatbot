@@ -1,3 +1,4 @@
 ./node_modules
 .env
+./dist
 dialogflowKeyJson.json
