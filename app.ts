@@ -22,6 +22,8 @@ const credentials = {
     client_email: process.env.DIALOGFLOW_CLIENT_EMAIL,
     private_key: process.env.DIALOGFLOW_PRIVATE_KEY
 }
+
+console.log('credentials=>', credentials)
 const sessionClient = new dialogflow.SessionsClient({ projectId, credentials });
 
 app.get(
@@ -114,6 +116,7 @@ async function handleText(event: any) {
     const sessionId = event.source.userId;
     const sessionPath = sessionClient.projectAgentSessionPath(projectId, sessionId);
 
+    console.log('event.message.text=>',event.message.text)
     const text = event.message.text;
     const request = {
         session: sessionPath,
