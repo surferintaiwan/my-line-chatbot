@@ -48,6 +48,7 @@ app.post(
         const results = await Promise.all(
             events.map(async (event: WebhookEvent) => {
                 try {
+                    console.log(111)
                     await textEventHandler(event);
                 } catch (err: unknown) {
                     if (err instanceof Error) {
@@ -72,6 +73,8 @@ app.post(
 
 // Function handler to receive the text.
 const textEventHandler = async (event: WebhookEvent): Promise<MessageAPIResponseBase | undefined> => {
+    console.log(222)
+    console.log('event=>',event)
     // Process all variables here.
     if (event.type !== 'message' || event.message.type !== 'text') {
         return;
@@ -106,6 +109,8 @@ const textEventHandler = async (event: WebhookEvent): Promise<MessageAPIResponse
 };
 
 async function handleText(event: any) {
+    console.log(333)
+    console.log('event=>', event)
     const sessionId = event.source.userId;
     const sessionPath = sessionClient.projectAgentSessionPath(projectId, sessionId);
 
