@@ -114,7 +114,20 @@ const textEventHandler = async (event: WebhookEvent): Promise<MessageAPIResponse
             switch (event.message.type) {
 
                 case 'text':
+                    if (event.message.text === '查寵物') {
+                        const con = await connection;
+                        const result = await con.query('select * from `flavors`');
+                        console.table(result[0])
+                        console.log(result[0])
+                        const response: TextMessage = {
+                            type: 'text',
+                            text: result[0].toString() as string
+                        };
+                        return await client.replyMessage(replyToken, response);
 
+                    }
+
+                    console.log(7777777)
                     // const response: TextMessage = {
                     //     type: 'text',
                     //     text: message.text
