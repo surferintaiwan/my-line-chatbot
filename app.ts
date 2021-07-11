@@ -2,7 +2,7 @@ import express, { Request, response, Response } from 'express';
 import dotenv from 'dotenv';
 import { ClientConfig, Client, middleware, WebhookEvent, TextMessage, MessageAPIResponseBase } from '@line/bot-sdk'
 import dialogflow from '@google-cloud/dialogflow';
-import { createConnection } from 'mysql2/promise';
+import { Connection, createConnection } from 'mysql2/promise';
 import { dbConfig } from './config/config'
 
 const PORT = process.env.PORT || 3000;
@@ -32,7 +32,10 @@ const credentials = {
 const sessionClient = new dialogflow.SessionsClient({ projectId, credentials });
 
 // mysql connection
-const connection = createConnection(process.env.NODE_ENV !== 'production' ? dbConfig.development : dbConfig.production);
+let connection: Connection
+createConnection(process.env.NODE_ENV !== 'production' ? dbConfig.development : dbConfig.production).then((connectionResult) => {
+    connection = connectionResult
+});
 
 // async function createTable() {
 //     try {
@@ -110,11 +113,10 @@ const textEventHandler = async (event: WebhookEvent): Promise<MessageAPIResponse
         case 'message':
             const message = event.message;
             switch (event.message.type) {
-
                 case 'text':
                     if (event.message.text === '查寵物') {
-                        const con = await connection;
-                        const result = await con.query('select * from `flavors`');
+                        console.log(789)
+                        const result = await connection.query('select * from `flavors`');
                         console.table(result[0])
                         console.log(result[0])
                         const response: TextMessage = {
