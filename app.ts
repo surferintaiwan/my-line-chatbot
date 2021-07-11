@@ -1,7 +1,9 @@
 import express, { Request, response, Response } from 'express';
-import dotenv from 'dotenv'
+import dotenv from 'dotenv';
 import { ClientConfig, Client, middleware, WebhookEvent, TextMessage, MessageAPIResponseBase } from '@line/bot-sdk'
-import dialogflow from '@google-cloud/dialogflow'
+import dialogflow from '@google-cloud/dialogflow';
+import { createConnection } from 'mysql2/promise';
+
 const PORT = process.env.PORT || 3000;
 const app = express();
 
@@ -23,8 +25,30 @@ const credentials = {
     private_key: (process.env.DIALOGFLOW_PRIVATE_KEY as string).replace(/\\n/g, '\n')
 }
 
-console.log('credentials=>', credentials)
+// console.log('credentials=>', credentials)
 const sessionClient = new dialogflow.SessionsClient({ projectId, credentials });
+
+// mysql connection
+const connection = createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'password',
+    database: 'my_line_chatbot'
+});
+
+async function createTable() {
+    try {
+        const con = await connection
+        const result = await con.query('select * from `flavors`');
+        console.table(result[0])
+        // console.log(result)
+        await con.end()
+
+    } catch (err) {
+        console.log(err)
+        throw Error(err)
+    }
+}
 
 app.get(
     '/',
@@ -52,7 +76,7 @@ app.post(
                 try {
                     console.log(111)
                     await textEventHandler(event);
-                } catch (err: unknown) {
+                } catch (err) {
                     if (err instanceof Error) {
                         console.error(err);
                     }
@@ -76,7 +100,7 @@ app.post(
 // Function handler to receive the text.
 const textEventHandler = async (event: WebhookEvent): Promise<MessageAPIResponseBase | undefined> => {
     console.log(222)
-    console.log('event=>',event)
+    console.log('event=>', event)
     // Process all variables here.
     if (event.type !== 'message' || event.message.type !== 'text') {
         return;
@@ -96,7 +120,7 @@ const textEventHandler = async (event: WebhookEvent): Promise<MessageAPIResponse
                     // };
 
                     // detect intent
-                    const responseByIntent =  await handleText(event);
+                    const responseByIntent = await handleText(event);
                     const response: TextMessage = {
                         type: 'text',
                         text: responseByIntent as string
@@ -116,7 +140,7 @@ async function handleText(event: any) {
     const sessionId = event.source.userId;
     const sessionPath = sessionClient.projectAgentSessionPath(projectId, sessionId);
 
-    console.log('event.message.text=>',event.message.text)
+    console.log('event.message.text=>', event.message.text)
     const text = event.message.text;
     const request = {
         session: sessionPath,
