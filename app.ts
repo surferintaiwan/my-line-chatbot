@@ -117,13 +117,15 @@ const textEventHandler = async (event: WebhookEvent): Promise<MessageAPIResponse
                     if (event.message.text === '查寵物') {
                         console.log(789)
                         const [rows, fields] = await connection.query('select * from `flavors`');
+                        const rowsWithArray = rows as any[]
                         console.log('rows=>', (rows as any[])[0]['name'])
+
                         console.log('fields=>', fields)
                         // console.log(rows)
                         const response: TextMessage = {
                             type: 'text',
                             // text: rows[0].toString() as string
-                            text: 'herher'
+                            text: rowsWithArray[1]['name']
                         };
                         return await client.replyMessage(replyToken, response);
 
