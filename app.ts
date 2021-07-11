@@ -31,25 +31,23 @@ const credentials = {
 // console.log('credentials=>', credentials)
 const sessionClient = new dialogflow.SessionsClient({ projectId, credentials });
 
-console.log()
 // mysql connection
 const connection = createConnection(process.env.NODE_ENV !== 'production' ? dbConfig.development : dbConfig.production);
 
-async function createTable() {
-    try {
-        const con = await connection
-        const result = await con.query('select * from `flavors`');
-        console.table(result[0])
-        // console.log(result)
-        await con.end()
+// async function createTable() {
+//     try {
+//         const con = await connection
+//         const result = await con.query('select * from `flavors`');
+//         console.table(result[0])
+//         await con.end()
 
-    } catch (err) {
-        console.log(err)
-        throw Error(err)
-    }
-}
+//     } catch (err) {
+//         console.log(err)
+//         throw Error(err)
+//     }
+// }
 
-createTable()
+// createTable()
 
 app.get(
     '/',
