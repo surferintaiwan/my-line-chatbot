@@ -1,8 +1,6 @@
 ./node_modules
 .env
 ./dist
-./config/config.ts
 dialogflowKeyJson.json
-config
 dist
 node_modules

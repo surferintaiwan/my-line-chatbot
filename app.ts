@@ -3,13 +3,16 @@ import dotenv from 'dotenv';
 import { ClientConfig, Client, middleware, WebhookEvent, TextMessage, MessageAPIResponseBase } from '@line/bot-sdk'
 import dialogflow from '@google-cloud/dialogflow';
 import { createConnection } from 'mysql2/promise';
+import { dbConfig } from './config/config'
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 
+const dbConfigByEnv: object = {}
 if (process.env.NODE_ENV !== 'production') {
     dotenv.config();
 }
+
 // LINE
 const clientConfig: ClientConfig = {
     channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN || '',
@@ -28,13 +31,9 @@ const credentials = {
 // console.log('credentials=>', credentials)
 const sessionClient = new dialogflow.SessionsClient({ projectId, credentials });
 
+console.log()
 // mysql connection
-const connection = createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'password',
-    database: 'my_line_chatbot'
-});
+const connection = createConnection(process.env.NODE_ENV !== 'production' ? dbConfig.development : dbConfig.production);
 
 async function createTable() {
     try {
@@ -49,6 +48,8 @@ async function createTable() {
         throw Error(err)
     }
 }
+
+createTable()
 
 app.get(
     '/',
